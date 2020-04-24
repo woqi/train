@@ -1,5 +1,5 @@
 此项目是一个多页面项目
-eject后不能恢复
+npm run eject 后不能恢复
 
 #### 第三章内容
 
@@ -73,7 +73,7 @@ export default App;
 
 如果使用contextType就可以不用使用Consumer标签来接收所传数据，这个语法糖只能在class里使用，*在只有一个context时使用*
 
-### **useContext**
+### 
 
 ### lazy 懒加载组件，和suspense配合
 
@@ -110,6 +110,59 @@ Suspense中fallback必须加一个实例或组件`<Load/>`
 `/*webpackChunkName:"About"*/`用来修改你引入的包名
 
 
+
+#### 第四章内容
+
+hooks是函数组件，所有逻辑在函数内部，没有实例化概念，提高了组件复用性，没有了this指向问题，也可以自定义hook
+
+所有hook函数都应以use开头，
+
+如果一个文件中有多次useState调用useState如何判断该改变哪个变量呢，是根据执行顺序来确定
+
+
+
+**useContext**
+
+useEffect 在组件每次渲染之后调用，并且自定义状态来决定调用与否，第一次调用相当于componentDidMount，后面的调用相当于componentDidUpdate，这个函数的作用是清除上一次函数遗留下来的状态，比如一个组件在渲染第3次第5次第7次执行useEffect函数，那么在4,6,8次渲染前会执行useEffect
+
+**useEffect** 第二项是数组，只有数组每一项都不变的情况下才不会执行
+
+```js
+import React,{useState,useEffect} from 'react';
+import './App.css';
+import About from './component/About.jsx'
+function App() {  
+  const[count,setCount]=useState(0)
+  const[size,setSize]=useState(
+    {width:document.documentElement.clientWidth,
+    height:document.documentElement.clientHeight}
+  )
+  const onResize = ()=>{
+    setSize({
+      width:document.documentElement.clientWidth,
+      height:document.documentElement.clientHeight
+    })
+  }
+  useEffect(()=>{
+    console.log(count)
+  },[])
+  useEffect(()=>{
+    window.addEventListener('resize',onResize,false)
+    return ()=>{
+      window.removeEventListener('resize',onResize,false)
+    }
+  },[count])
+  return (
+    <div className="App">
+      <button onClick = {()=>{setCount(count+1)}}>click {count}, size: 宽{size.width} 高{size.height}</button>
+        <About></About> 
+    </div>
+  );
+}
+export default App;
+```
+
+useEffect第一个参数是函数，第二个参数是数组，数组在改变后才会重新订阅
 
 
 
