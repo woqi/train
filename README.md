@@ -1,4 +1,4 @@
-此项目是一个多页面项目
+去哪网此项目是一个多页面项目
 npm run eject 后不能恢复
 
 #### 第三章内容
@@ -109,19 +109,45 @@ Suspense中fallback必须加一个实例或组件`<Load/>`
 
 `/*webpackChunkName:"About"*/`用来修改你引入的包名
 
-
-
 #### 第四章内容
 
 hooks是函数组件，所有逻辑在函数内部，没有实例化概念，提高了组件复用性，没有了this指向问题，也可以自定义hook
 
 所有hook函数都应以use开头，
 
-如果一个文件中有多次useState调用useState如何判断该改变哪个变量呢，是根据执行顺序来确定
-
-
+如果一个文件中有多次useState调用useState如何判断该改变哪个变量呢，是根据执行顺序来确定的
 
 **useContext**
+
+一个简单的使用，如果涉及到兄弟组件传值可以再父容器里生产一个context，两个子容器使用这个数据，但是正常props也可以提升到父级
+
+```js
+import React,{useState,useContext,createContext} from 'react';
+import './App.css';
+const CountContext = createContext();
+
+function Counter(){
+  const count = useContext(CountContext)
+  return(
+    <div>
+      <h1>2:{count}</h1>
+    </div>
+  ) 
+}
+function App() {  
+  const[count,setCount]=useState(0)
+  return (
+    <div className="App">
+      <button onClick = {()=>{setCount(count+1)}}>click {count}</button>
+      <CountContext.Provider value={count}>
+        <Counter></Counter>
+      </CountContext.Provider>
+    </div>
+  );
+}
+export default App;
+
+```
 
 useEffect 在组件每次渲染之后调用，并且自定义状态来决定调用与否，第一次调用相当于componentDidMount，后面的调用相当于componentDidUpdate，这个函数的作用是清除上一次函数遗留下来的状态，比如一个组件在渲染第3次第5次第7次执行useEffect函数，那么在4,6,8次渲染前会执行useEffect
 
@@ -162,11 +188,236 @@ function App() {
 export default App;
 ```
 
-useEffect第一个参数是函数，第二个参数是数组，数组在改变后才会重新订阅
+useEffect第一个参数是函数，第二个参数是数组，数组在改变后才会重新订阅，如上例代码所示
 
 
 
-### memo 用来优化渲染性能
+### memo 用来优化函数组件的渲染性能
+
+传入的值没有变就不会触发组件渲染，在hooks的状况下所有组件都是函数组件
+
+主要作用是决定该组件是否重复执行
+
+useMemo语法和useEffect一致，不传第二个参数就只会运行一次，此hook是在渲染期间完成的，
+
+useMemo在需要大量计算时候使用
+
+
+
+### useCallback
+
+```js
+//useMemo(()=>{fn})等价于useCallback(fn)
+const onPaginationChange = useCallback((page,pageSize)=>{
+    console.log('p-change',page,pageSize)
+},[pagination,dispatch])
+
+<Child onChange=onPaginationChange> </Child>
+
+```
+
+### useRef
+
+获取子组件dom节点的句柄，储存渲染周期之间共享数据的储存
+
+父传子时候想用useRef获取子组件内容，子组件需要为class形式，
+
+**获取dom节点例子**
+
+```js
+import React,{useState,useMemo,useRef,useEffect, useCallback,Component} from 'react';
+//,useCallback,memo,useCallback,PureComponent,
+import './App.css';
+class Counter extends Component {
+  render(){
+    const {props} = this
+    return(
+      <div onClick = {props.clickCounter}>
+        来自app的数字{props.count}
+      </div>
+    )
+  }  
+}
+function App(props) {
+  const [count, setCount] = useState(0);
+  const counterRef = useRef();
+  const double = useMemo(() => {
+    return count * 2;
+  }, [count]);
+  const addONe =()=>{
+    setCount(count + 1);
+  }
+  const clickCounter= useCallback(()=>{
+    console.log('clickCounter',counterRef.current)
+    //获取了子组件的节点
+    //输出：clickCounter Counter {props: {…}, context: {…}, refs: {…}, updater: {…}, _reactInternalFiber: FiberNode, …}
+  },[counterRef])
+  return (
+    <div className="App">
+      <button onClick={addONe}>click {count},double {double},</button>
+      <Counter ref={counterRef} clickCounter={clickCounter} count={count}></Counter>
+    </div>
+  );
+}
+export default App;
+```
+
+**保存状态例子**
+
+```react
+	import React,{useState,useMemo,useRef,useEffect, useCallback,Component} from 'react';
+//,useCallback,memo,useCallback,PureComponent,
+import './App.css';
+class Counter extends Component {
+  render(){
+    const {props} = this
+    return(
+      <div onClick = {props.clickCounter}>
+        来自app的数字{props.count}
+      </div>
+    )
+  }  
+}
+function App(props) {
+  const [count, setCount] = useState(0);
+  const counterRef = useRef();
+  const clock = useRef();//闹钟,useref保存数据应用
+  const double = useMemo(() => {
+    return count * 2;
+  }, [count]);
+  const addONe =()=>{
+    setCount(count + 1);
+  }
+  //启动定时器
+  useEffect(()=>{
+    clock.current = setInterval(()=>{
+      setCount( count => count + 1 )  
+    },1000)
+  },[])
+  //检查count值
+  useEffect(()=>{
+    if(count>=5){
+      clearInterval(clock.current)
+    }
+  },[count])
+  const clickCounter= useCallback(()=>{
+    console.log('clickCounter',counterRef.current)
+    //获取了子组件的节点
+    //输出：clickCounter Counter {props: {…}, context: {…}, refs: {…}, updater: {…}, _reactInternalFiber: FiberNode, …}
+  },[counterRef])
+  return (
+    <div className="App">
+      <button onClick={addONe}>click {count},double {double},</button>
+      <Counter ref={counterRef} clickCounter={clickCounter} count={count}></Counter>
+    </div>
+  );
+}
+export default App;
+```
+
+
+
+### 自定义hook例子
+
+```react
+function useSize(){
+  const [size,setSize] = useState({
+    width: document.documentElement.clientWidth,
+    height: document.documentElement.clientHeight
+  })
+  const onResize = useCallback(()=>{//设置宽高
+    setSize({
+      width: document.documentElement.clientWidth,
+      height: document.documentElement.clientHeight
+    })
+  },[])
+  const listenResize = ()=>{
+    window.addEventListener('resize',onResize,false)
+    return ()=>{//回调清除监听resize
+      window.removeEventListener('resize',onResize,false)
+    }
+  }
+  // addEventRis
+  useEffect(()=>{//只用获取一次窗口大小
+    listenResize()
+  })
+  return size
+}
+function App(props) {
+  const [count, setCount] = useCount(0)
+  const size = useSize()
+  const addONe =()=>{
+    setCount(count + 1);
+  }
+  return (
+    <div className="App">
+      <button onClick={addONe}>click {count}</button>
+      <div>宽：{size.width}, 高：{size.height}</div>
+      <Counter ></Counter>
+      {/* count={count} */}
+    </div>
+  );
+}
+export default App;
+
+```
+
+### 只在最顶层使用 Hook
+
+### 只在 React 函数中调用 Hook
+
+hooks和class的区别
+
+useState替代了constructor
+
+useMemo=shouldComponentUpdate
+
+useEffect = componentDidUpdate&&componentWillUpdate结合体
+
+useFef就是一种保存属性变量的写法，但是不支持传入函数
+
+获取历史props还是使用useRef
+
+```react
+function Counter1 (){
+  const [count,SetCount] = useState()
+  const prevContRef = useRef();
+  useEffect(()=>{
+    prevContRef.current = count 
+  })
+  const preCount  = prevContRef.current
+  return (
+  <div> now: {count}, before: {preCount}</div>
+  )
+}
+```
+
+### 强制更新hooks组件
+
+类组件会调用forceUpdate()会导致组件跳过shouldComponentUpdate(),直接调用render()。
+
+函数组件强制更新思路是设置一个值 useState来更新这个值做到强制刷新渲染
+
+ 原理：
+
+```js
+const[update,setUpdate] = useState(0)
+function forceUpdate(){
+  setUpdate(update=>update+1)
+}
+```
+
+#### 第五章内容
+
+hooks中使用redux
+
+#### 第六章pwa
+
+第七章
+
+两个实现后台数据，express，koa
+
+express是开箱即用，koa需要搭建中间件
 
 
 
