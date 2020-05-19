@@ -71,7 +71,7 @@ export function setSelectedCity(city){
     if(currentCity){
       dispatch(setFrom(city))
     }else{
-      dispatch(detFrom(city))
+      dispatch(setFrom(city))
     }
     dispatch(hideCitySelector())
   }
@@ -89,7 +89,6 @@ export function hideDateSelector() {
       payload: false,
   };
 }
-
 export function exchangeFromTo(){
   return (dispatch,getState)=>{
     const {from,to}= getState();
@@ -99,8 +98,8 @@ export function exchangeFromTo(){
 }
 export function setDepartDate(departDate) {
   return {
-      type: ACTION_SET_DEPART_DATE,
-      payload: departDate,
+    type: ACTION_SET_DEPART_DATE,
+    payload: departDate,
   };
 }
 export function fetchCityData(){
@@ -120,10 +119,12 @@ export function fetchCityData(){
     .then(citeyData =>{
       dispatch(setCityData(citeyData));
       localStorage.setItem('city_data_cache',
-      JSON.stringify({
-        expires:Date.now()+60*1000,
-        data:citeyData
-      }))
+        JSON.stringify({
+          expires:Date.now()+60*1000,
+          data:citeyData
+        })
+      )
+      dispatch(setIsLoadingCityData(false));
     })
   }
 }
