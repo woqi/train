@@ -1,4 +1,4 @@
-import React, { useEffect,useCallback } from "react";
+import React, { useEffect, useCallback } from "react";
 import { connect } from "react-redux";
 
 import Header from "../Header/Header.jsx";
@@ -8,25 +8,28 @@ import Journey from "../Journey/Journey.jsx";
 import Submit from "../Submit/Submit.jsx";
 import Debounced from "lodash.debounce";
 
-import {ex}
+import { exchangeFromTo, showCitySelector } from "../store/action.js";
 
 import "./App.scss";
 
 function App(props) {
-  const {from, to} = props
+  const { from, to,dispatch } = props;
   useEffect(() => {}, []);
   function showText() {
     console.log("使用防抖");
   }
-  const onBack =useCallback(()=>{
-    window.history.back()
-  },[]) 
+  const onBack = useCallback(() => {
+    window.history.back();
+  }, []);
   return (
     <div>
       <div className="header-wrapper">
         <Header title="火车票" onBack={onBack}></Header>
       </div>
-      <Journey from={from} to={to}></Journey>
+      <Journey from={from} to={to}
+        exchangeFromTo={()=>dispatch(exchangeFromTo())}
+        showCitySelector={i=>dispatch(showCitySelector(i))}
+        ></Journey>
       <DepartDate></DepartDate>
       <HighSpeed></HighSpeed>
       <Submit></Submit>
@@ -39,7 +42,6 @@ export default connect(
     return state;
   },
   function mapDispatchToProps(dispatch) {
-    return {dispatch};
+    return { dispatch };
   }
 )(App);
- 
